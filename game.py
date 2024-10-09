@@ -1,48 +1,83 @@
-import random 
-import sys
 import pygame
-from pygame.locals import * 
+import random
 
-def Welcomescreen():
-    print("Welcome")
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 400, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Flappy Bird Clone')
+
+# Load images
+bird_image = pygame.image.load('C:/path/to/FLAPPY BIRD/Game Gallery/Flappy_Bird-PNG-Picture.png')  
+pipe_image = pygame.image.load('C:/path/to/FLAPPY BIRD/Game Gallery/pipe.png')  
+
+background_image = pygame.image.load('bg_5.png')  
+
+# Game variables
+bird_x = 50
+bird_y = HEIGHT // 2
+bird_velocity = 0
+gravity = 0.5
+jump_strength = -10
+
+# Pipe variables
+pipe_width = 80
+pipe_gap = 150
+pipe_speed = 3
+pipes = []
+score = 0
+font = pygame.font.Font(None, 36)
+
+def create_pipe():
+    height = random.randint(100, 400)
+    top = pipe_image.get_rect(topleft=(WIDTH, height - pipe_image.get_height()))
+    bottom = pipe_image.get_rect(topleft=(WIDTH, height + pipe_gap))
+    return top, bottom
+
+# Game loop
+clock = pygame.time.Clock()
+running = True
+while running:
+    screen.blit(background_image, (0, 0))
     
-fps = 32
-screenwidth = 298
-screenheight = 511
-screen = pygame.display.set_mode((screenwidth,screenheight))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                bird_velocity = jump_strength
 
-groundy = screenwidth * 0.8
-game_sprite = {}
-game_sound = {}
+    # Update bird
+    bird_velocity += gravity
+    bird_y += bird_velocity
+    screen.blit(bird_image, (bird_x, bird_y))
+    
+    # Update pipes
+    if len(pipes) == 0 or pipes[-1][0].x < WIDTH - 200:
+        pipes.append(create_pipe())
 
-#asset of game 
-player = '/python game/Flappy bird/Game Gallery/Flappy-Bird-PNG.png'
-background = '/python game/Flappy bird/Game Gallery/bg_5.png'
-pipe = '/python game/Flappy bird/Game Gallery/pipe.png'
+    for pipe in pipes:
+        pipe[0].x -= pipe_speed
+        pipe[1].x -= pipe_speed
+        screen.blit(pipe_image, pipe[0])
+        screen.blit(pipe_image, pipe[1])
 
+        # Collision detection
+        if bird_x + bird_image.get_width() > pipe[0].x and bird_x < pipe[0].x + pipe_width:
+            if bird_y < pipe[0].y + pipe_image.get_height() or bird_y + bird_image.get_height() > pipe[1].y:
+                running = False
 
-if __name__ == "__main__":
-    pygame.init()
-    fpsclock = pygame.time.Clock()
-    pygame.display.set_caption('Flappy bird game by IS ke bacche')
-    game_sprite['numbers'] = (
-        pygame.image.load('python game/Flappy Bird/Game Gallery/1-Number-PNG.png').convert_alpha(),
-        pygame.image.load('python game/Flappy Bird/Game Gallery/2-Number-PNG.png').convert_alpha(),
-        pygame.image.load('Flappy bird/Game Gallery/3-Number-PNG.png').convert_alpha(),
-    )
+    # Remove off-screen pipes
+    pipes = [pipe for pipe in pipes if pipe[0].x > -pipe_width]
 
+    # Draw score
+    score_display = font.render(str(score), True, (255, 255, 255))
+    screen.blit(score_display, (WIDTH // 2, 20))
 
-game_sprite['message'] = pygame.image.load('/python game/Flappy bird/Game Gallery/messaage.png').convert_alpha()
-game_sprite['pipe'] = pygame.image.load('/python game/Flappy bird/Game Gallery/pipe.png').convert_alpha()
+    # Update display
+    pygame.display.flip()
+    clock.tick(60)
 
-#Game souund to be added 
-
-
-
-
-#end
-game_sprite['player'] = pygame.image.load('player').convert_alpha()
-game_sprite['background'] = pygame.image.load('background').convert_alpha()
-
-while True:
-    Welcomescreen()
+pygame.quit()
